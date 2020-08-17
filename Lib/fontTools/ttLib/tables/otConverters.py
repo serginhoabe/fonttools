@@ -53,8 +53,6 @@ def buildConverters(tableSpec, tableNamespace):
 			converterClass = FeatureParams
 		elif name in ("CIDGlyphMapping", "GlyphCIDMapping"):
 			converterClass = StructWithLength
-		elif name == "Flags":
-			converterClass = STATFlags
 		else:
 			if not tp in converterMapping and '(' not in tp:
 				tableName = tp
@@ -1777,6 +1775,7 @@ converterMapping = {
 	"LookupFlag": LookupFlag,
 	"ExtendMode": ExtendMode,
 	"CompositeMode": CompositeMode,
+	"STATFlags": STATFlags,
 
 	# AAT
 	"CIDGlyphMap":	CIDGlyphMap,
