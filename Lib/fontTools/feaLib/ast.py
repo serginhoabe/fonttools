@@ -1916,10 +1916,10 @@ class STATDesignAxis(Statement):
         builder.addDesignAxis(self, self.location)
 
     def asFea(self, indent=""):
-        res = f"DesignAxis {self.tag} {self.axisOrder} {{ "
-        for nameRecord in self.names:
-            res += nameRecord.asFea()
-            res += "\n"
+        indent += SHIFT
+        res = f"DesignAxis {self.tag} {self.axisOrder} {{ \n"
+        res += ("\n" + indent).join([s.asFea(indent=indent) for s in
+                                     self.names]) + "\n"
         res += "};"
         return res
 
@@ -1939,10 +1939,10 @@ class ElidedFallbackName(Statement):
         builder.setElidedFallbackName(self.names, self.location)
 
     def asFea(self, indent=""):
-        res = "ElidedFallbackName { "
-        for nameRecord in self.names:
-            res += nameRecord.asFea()
-            res += "\n"
+        indent += SHIFT
+        res = "ElidedFallbackName { \n"
+        res += ("\n" + indent).join([s.asFea(indent=indent) for s in
+                                     self.names]) + "\n"
         res += "};"
         return res
 
