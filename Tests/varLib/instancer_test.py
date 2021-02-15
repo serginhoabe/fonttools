@@ -1343,14 +1343,14 @@ class InstantiateSTATTest(object):
 
 
 def test_pruningUnusedNames(varfont):
-    varNameIDs = instancer.getVariationNameIDs(varfont)
+    varNameIDs = instancer.names.getVariationNameIDs(varfont)
 
     assert varNameIDs == set(range(256, 297 + 1))
 
     fvar = varfont["fvar"]
     stat = varfont["STAT"].table
 
-    with instancer.pruningUnusedNames(varfont):
+    with instancer.names.pruningUnusedNames(varfont):
         del fvar.axes[0]  # Weight (nameID=256)
         del fvar.instances[0]  # Thin (nameID=258)
         del stat.DesignAxisRecord.Axis[0]  # Weight (nameID=256)
@@ -1358,7 +1358,7 @@ def test_pruningUnusedNames(varfont):
 
     assert not any(n for n in varfont["name"].names if n.nameID in {256, 258})
 
-    with instancer.pruningUnusedNames(varfont):
+    with instancer.names.pruningUnusedNames(varfont):
         del varfont["fvar"]
         del varfont["STAT"]
 
@@ -2015,7 +2015,7 @@ def _test_name_records(varfont, expected, isNonRIBBI, platforms=[0x409]):
 def test_updateNameTable_with_registered_axes_ribbi(
     varfont, limits, expected, isNonRIBBI
 ):
-    instancer.updateNameTable(varfont, limits)
+    instancer.names.updateNameTable(varfont, limits)
     _test_name_records(varfont, expected, isNonRIBBI)
 
 
@@ -2038,14 +2038,14 @@ def test_updatetNameTable_axis_order(varfont):
     ]
     nametable = varfont["name"]
     buildStatTable(varfont, axes)
-    instancer.updateNameTable(varfont, {"wdth": 75, "wght": 400})
+    instancer.names.updateNameTable(varfont, {"wdth": 75, "wght": 400})
     assert nametable.getName(17, 3, 1, 0x409).toUnicode() == "Regular Condensed"
 
     # Swap the axes so the names get swapped
     axes[0], axes[1] = axes[1], axes[0]
 
     buildStatTable(varfont, axes)
-    instancer.updateNameTable(varfont, {"wdth": 75, "wght": 400})
+    instancer.names.updateNameTable(varfont, {"wdth": 75, "wght": 400})
     assert nametable.getName(17, 3, 1, 0x409).toUnicode() == "Condensed Regular"
 
 
@@ -2094,13 +2094,13 @@ def test_updateNameTable_with_multilingual_names(varfont, limits, expected, isNo
     name.setName("Negreta", 266, 3, 1, 0x405)  # nameID 266=Black STAT entry
     name.setName("Zhuštěné", 279, 3, 1, 0x405)  # nameID 279=Condensed STAT entry
 
-    instancer.updateNameTable(varfont, limits)
+    instancer.names.updateNameTable(varfont, limits)
     names = _test_name_records(varfont, expected, isNonRIBBI, platforms=[0x405])
 
 
 def test_updateNameTable_missing_axisValues(varfont):
     with pytest.raises(ValueError, match="Cannot find Axis Values \['wght=200'\]"):
-        instancer.updateNameTable(varfont, {"wght": 200})
+        instancer.names.updateNameTable(varfont, {"wght": 200})
 
 
 def test_updateNameTable_missing_stat(varfont):
@@ -2108,7 +2108,7 @@ def test_updateNameTable_missing_stat(varfont):
     with pytest.raises(
         ValueError, match="Cannot update name table since there is no STAT table."
     ):
-        instancer.updateNameTable(varfont, {"wght": 400})
+        instancer.names.updateNameTable(varfont, {"wght": 400})
 
 
 @pytest.mark.parametrize(
@@ -2143,10 +2143,10 @@ def test_updateNameTable_vf_with_italic_attribute(
 ):
     font_link_axisValue = varfont["STAT"].table.AxisValueArray.AxisValue[4]
     # Unset ELIDABLE_AXIS_VALUE_NAME flag
-    font_link_axisValue.Flags &= ~instancer.ELIDABLE_AXIS_VALUE_NAME
+    font_link_axisValue.Flags &= ~instancer.names.ELIDABLE_AXIS_VALUE_NAME
     font_link_axisValue.ValueNameID = 294  # Roman --> Italic
 
-    instancer.updateNameTable(varfont, limits)
+    instancer.names.updateNameTable(varfont, limits)
     names = _test_name_records(varfont, expected, isNonRIBBI)
 
 
@@ -2169,7 +2169,7 @@ def test_updateNameTable_format4_axisValues(varfont):
         axisValue.AxisValueRecord.append(rec)
     stat.AxisValueArray.AxisValue.append(axisValue)
 
-    instancer.updateNameTable(varfont, {"wdth": 79, "wght": 900})
+    instancer.names.updateNameTable(varfont, {"wdth": 79, "wght": 900})
     expected = {
         (1, 3, 1, 0x409): "Test Variable Font Dominant Value",
         (2, 3, 1, 0x409): "Regular",
@@ -2183,10 +2183,10 @@ def test_updateNameTable_elided_axisValues(varfont):
     stat = varfont["STAT"].table
     # set ELIDABLE_AXIS_VALUE_NAME flag for all axisValues
     for axisValue in stat.AxisValueArray.AxisValue:
-        axisValue.Flags |= instancer.ELIDABLE_AXIS_VALUE_NAME
+        axisValue.Flags |= instancer.names.ELIDABLE_AXIS_VALUE_NAME
 
     stat.ElidedFallbackNameID = 266  # Regular --> Black
-    instancer.updateNameTable(varfont, {"wght": 400})
+    instancer.names.updateNameTable(varfont, {"wght": 400})
     # Since all axis values are elided, the elided fallback name
     # must be used to construct the style names. Since we
     # changed it to Black, we need both a typoSubFamilyName and
