@@ -170,7 +170,7 @@ def updateNameTable(varfont, axisLimits):
         raise ValueError("Cannot update name table since there are no STAT Axis Values")
     fvar = varfont["fvar"]
 
-    # The updated name table must reflect the new 'zero origin' of the font.
+    # The updated name table will reflect the new 'zero origin' of the font.
     # If we're instantiating a partial font, we will populate the unpinned
     # axes with their default axis values.
     fvarDefaults = {a.axisTag: a.defaultValue for a in fvar.axes}
@@ -184,7 +184,7 @@ def updateNameTable(varfont, axisLimits):
     axisValueTables = axisValuesFromAxisLimits(stat, defaultAxisCoords)
     checkAxisValuesExist(stat, axisValueTables, defaultAxisCoords)
 
-    # Remove axis Values which have ELIDABLE_AXIS_VALUE_NAME flag set.
+    # Ignore axis Values which have ELIDABLE_AXIS_VALUE_NAME flag set.
     # Axis Values which have this flag enabled won't be visible in
     # application font menus.
     axisValueTables = [
@@ -255,10 +255,10 @@ def _updateNameRecords(varfont, axisValues):
     stat = varfont["STAT"].table
 
     axisValueNameIDs = [a.ValueNameID for a in axisValues]
-    ribbiNameIDs = [n for n in axisValueNameIDs if nameIDIsRibbi(nametable, n)]
+    ribbiNameIDs = [n for n in axisValueNameIDs if _isRibbi(nametable, n)]
     nonRibbiNameIDs = [n for n in axisValueNameIDs if n not in ribbiNameIDs]
     elidedNameID = stat.ElidedFallbackNameID
-    elidedNameIsRibbi = nameIDIsRibbi(nametable, elidedNameID)
+    elidedNameIsRibbi = _isRibbi(nametable, elidedNameID)
 
     getName = nametable.getName
     platforms = set((r.platformID, r.platEncID, r.langID) for r in nametable.names)
@@ -298,7 +298,7 @@ def _updateNameRecords(varfont, axisValues):
         )
 
 
-def nameIDIsRibbi(nametable, nameID):
+def _isRibbi(nametable, nameID):
     engNameRecords = any(
         r
         for r in nametable.names
@@ -306,7 +306,7 @@ def nameIDIsRibbi(nametable, nameID):
     )
     if not engNameRecords:
         raise ValueError(
-            f"Canot determine if there are RIBBI Axis Value Tables "
+            f"Cannot determine if there are RIBBI Axis Value Tables "
             "since there are no name table Records which have "
             "platformID=3, platEncID=1, langID=0x409"
         )
@@ -339,6 +339,9 @@ def _updateNameTableStyleRecords(
     currentStyleName = nametable.getName(
         NameID.TYPOGRAPHIC_SUBFAMILY_NAME, *platform
     ) or nametable.getName(NameID.SUBFAMILY_NAME, *platform)
+
+    if not all([currentFamilyName, currentStyleName]):
+        raise ValueError("Name table must have NameIDs 1 and 2")
 
     currentFamilyName = currentFamilyName.toUnicode()
     currentStyleName = currentStyleName.toUnicode()
