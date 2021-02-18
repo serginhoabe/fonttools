@@ -75,92 +75,29 @@ def updateNameTable(varfont, axisLimits):
     """
     # This task can be split into two parts:
 
-    # Task 1: Collecting and sorting the relevant AxisValues:
-    # 1. First check the variable font has a STAT table and it contains
-    #    AxisValues.
-    # 2. Create a dictionary which contains the pinned axes from the
-    #    axisLimits dict and for the unpinned axes, we'll use the fvar
-    #    default coordinates e.g
-    #    axisLimits = {"wght": 500, "wdth": AxisRange(75, 100), our dict will
-    #    be {"wght": 500, "wdth": 100} if the width axis has a default of 100.
-    # 3. Create a new list of AxisValues whose Values match the dict we just
-    #    created.
-    # 4. Remove any AxisValues from the list which have the
-    #    Elidable_AXIS_VALUE_NAME flag set.
-    # 5. Remove and sort AxisValues in the list so format 4 AxisValues take
-    #    precedence. According to the MS Spec "if a format 1, format 2 or
-    #    format 3 table has a (nominal) value used in a format 4 table that
-    #    also has values for other axes, the format 4 table, being the more
-    #    specific match, is used",
-    #    https://docs.microsoft.com/en-us/typography/opentype/spec/stat#axis-value-table-format-4
+    # Task 1: Collecting and sorting the relevant AxisValues by creating a new
+    # dictionary which corresponds to the new default axis locations. We then
+    # create a list of new AxisValues which match the coordinates of the new
+    # dictionary but we also skip any AxisValues which are elided.
 
-    # Task 2: Updating a name table's style and family names from a list of
-    # AxisValues:
-    # 1. Sort AxisValues into two groups. For the first group, the names must be
-    #    any of the following ["Regular", "Italic", "Bold", "Bold Italic"].
-    #    This group of names is often referred to as "RIBBI" names. For the
-    #    other group, names must be non-RIBBI e.g "Medium Italic", "Condensed"
-    #    etc.
-    # 2. Repeat the next steps for each name table record platform:
-    #    a. Create new subFamily name and Typographic subFamily name from the
-    #       above groups.
-    #    b. Update nameIDs 1, 2, 3, 4, 6, 16, 17 using the new name created
-    #       in the last step.
-    #
-    # Step by step example:
-    # A variable font which has a width and weight axes.
-    # AxisValues in font (represented as simplified dicts):
-    # axisValues = [
-    #     {"name": "Light", "axis": "wght", "value": 300},
-    #     {"name": "Regular", "axis": "wght", "value": 400},
-    #     {"name": "Medium", "axis": "wght", "value": 500},
-    #     {"name": "Bold", "axis": "wght", "value": 600},
-    #     {"name": "Condensed", "axis": "wdth", "value": 75},
-    #     {"name": "Normal", "axis": "wdth", "value": 100, "flags": 0x2},
-    # ]
-    # # Let's instantiate a partial font which has a pinned wght axis and an
-    #   unpinned width axis.
-    # >>> axisLimits = {"wght": 500, "width": AxisRange(75, 100)}
-    # >>> updateNameTable(varfont, axisLimits)
-    #
-    # AxisValues remaining after task 1.3:
-    # axisValues = [
-    #     {"name": "Medium", "axis": "wght", "value": 500},
-    #     {"name": "Normal", "axis": "wdth", "value": 100, "flags": 0x2}
-    # ]
-    #
-    # AxisValues remaining after completing all 1.x tasks:
-    # axisValues = [{"name": "Medium", "axis": "wght", "value": 500}]
-    # The Normal AxisValue is removed because it has the
-    # Elidable_AXIS_VALUE_NAME flag set.
-    #
-    # # AxisValues after separating into two groups in task 2.1:
-    # ribbiAxisValues = []
-    # nonRibbiAxisValues = [{"name": "Medium", "axis": "wght", "value": 500}]
-    #
-    # # Names created from AxisValues in task 2.2a for Win US English platform:
-    # subFamilyName = ""
-    # typoSubFamilyName = "Medium"
-    #
-    # NameRecords updated in task 2.2b for Win US English platform:
-    # NameID 1 familyName: "Open Sans" --> "Open Sans Medium"
+    # Task 2: Update the name table's style and family names records using the
+    # AxisValues found in task 1. The name table will conform to the RIBBI
+    # naming model, more info can be found here:
+    # https://docs.microsoft.com/en-us/typography/opentype/spec/name#name-ids
+
+    # Example: Updating a partial variable font:
+    # | >>> ttFont = TTFont("OpenSans[wdth,wght].ttf")
+    # | >>> updateNameTable(ttFont, {"wght": AxisRange(400, 900), "wdth": 75})
+
+    # The name table records will be updated in the following manner:
+    # NameID 1 familyName: "Open Sans" --> "Open Sans Condensed"
     # NameID 2 subFamilyName: "Regular" --> "Regular"
     # NameID 3 Unique font identifier: "3.000;GOOG;OpenSans-Regular" --> \
-    #     "3.000;GOOG;OpenSans-Medium"
-    # NameID 4 Full font name: "Open Sans Regular" --> "Open Sans Medium"
-    # NameID 6 PostScript name: "OpenSans-Regular" --> "OpenSans-Medium"
+    #     "3.000;GOOG;OpenSans-Condensed"
+    # NameID 4 Full font name: "Open Sans Regular" --> "Open Sans Condensed"
+    # NameID 6 PostScript name: "OpenSans-Regular" --> "OpenSans-Condensed"
     # NameID 16 Typographic Family name: None --> "Open Sans"
-    # NameID 17 Typographic Subfamily name: None --> "Medium"
-    #
-    # Notes on name table record updates:
-    # - Typographic names have been added since Medium is a non-Ribbi name.
-    # - Neither the before or after name records include the Width AxisValue
-    #   names because the "Normal" AxisValue has the
-    #   Elidable_AXIS_VALUE_NAME flag set.
-    #   If we instantiate the same font but pin the wdth axis to 75,
-    #   the "Condensed" AxisValue will be included.
-    # - For info regarding how RIBBI and non-RIBBI can be constructed see:
-    # https://docs.microsoft.com/en-us/typography/opentype/spec/name#name-ids
+    # NameID 17 Typographic Subfamily name: None --> "Condensed"
     from . import AxisRange, axisValuesFromAxisLimits
 
     if "STAT" not in varfont:
@@ -185,7 +122,7 @@ def updateNameTable(varfont, axisLimits):
     checkAxisValuesExist(stat, axisValueTables, defaultAxisCoords)
 
     # Ignore axis Values which have ELIDABLE_AXIS_VALUE_NAME flag set.
-    # Axis Values which have this flag enabled won't be visible in
+    # AxisValues which have this flag enabled won't be visible in
     # application font menus.
     axisValueTables = [
         v for v in axisValueTables if not v.Flags & ELIDABLE_AXIS_VALUE_NAME
@@ -220,8 +157,12 @@ def checkAxisValuesExist(stat, axisValues, axisCoords):
 
 
 def _sortAxisValues(axisValues):
-    # Sort and remove duplicates ensuring that format 4 Axis Values
-    # are dominant
+    # Sort and remove duplicates and ensure that format 4 AxisValues
+    # are dominant. We need format 4 AxisValues to be dominant because the
+    # MS Spec states, "if a format 1, format 2 or format 3 table has a
+    # (nominal) value used in a format 4 table that also has values for
+    # other axes, the format 4 table, being the more specific match, is used",
+    # https://docs.microsoft.com/en-us/typography/opentype/spec/stat#axis-value-table-format-4
     results = []
     seenAxes = set()
     # Sort format 4 axes so the tables with the most AxisValueRecords
