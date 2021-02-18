@@ -70,6 +70,9 @@ def pruningUnusedNames(varfont):
 def updateNameTable(varfont, axisLimits):
     """Update instatiated variable font's name table using STAT AxisValues.
 
+    Raises ValueError if the STAT table is missing or an Axis Value table is
+    missing for requested axis locations.
+
     First, collect all STAT AxisValues that match the new default axis locations
     (excluding "elided" ones); concatenate the strings in design axis order,
     while giving priority to "synthetic" values (Format 4), to form the
@@ -153,22 +156,20 @@ def checkAxisValuesExist(stat, axisValues, axisCoords):
 
 
 def _sortAxisValues(axisValues):
-    # Sort and remove duplicates and ensure that format 4 AxisValues
-    # are dominant. We need format 4 AxisValues to be dominant because the
-    # MS Spec states, "if a format 1, format 2 or format 3 table has a
+    # Sort by axis index, remove duplicates and ensure that format 4 AxisValues
+    # are dominant.
+    # The MS Spec states: "if a format 1, format 2 or format 3 table has a
     # (nominal) value used in a format 4 table that also has values for
     # other axes, the format 4 table, being the more specific match, is used",
     # https://docs.microsoft.com/en-us/typography/opentype/spec/stat#axis-value-table-format-4
     results = []
     seenAxes = set()
-    # Sort format 4 axes so the tables with the most AxisValueRecords
-    # are first
+    # Sort format 4 axes so the tables with the most AxisValueRecords are first
     format4 = sorted(
         [v for v in axisValues if v.Format == 4],
         key=lambda v: len(v.AxisValueRecord),
         reverse=True,
     )
-    nonFormat4 = [v for v in axisValues if v not in format4]
 
     for val in format4:
         axisIndexes = set(r.AxisIndex for r in val.AxisValueRecord)
@@ -177,7 +178,9 @@ def _sortAxisValues(axisValues):
             seenAxes |= axisIndexes
             results.append((minIndex, val))
 
-    for val in nonFormat4:
+    for val in axisValues:
+        if val in format4:
+            continue
         axisIndex = val.AxisIndex
         if axisIndex not in seenAxes:
             seenAxes.add(axisIndex)
