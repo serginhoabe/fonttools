@@ -272,7 +272,7 @@ def _updateNameTableStyleRecords(
     ) or nametable.getName(NameID.SUBFAMILY_NAME, *platform)
 
     if not all([currentFamilyName, currentStyleName]):
-        raise ValueError("Name table must have NameIDs 1 and 2")
+        raise ValueError(f"Missing required NameIDs 1 and 2 for platform {platform}")
 
     currentFamilyName = currentFamilyName.toUnicode()
     currentStyleName = currentStyleName.toUnicode()
@@ -284,10 +284,10 @@ def _updateNameTableStyleRecords(
     if typoSubFamilyName:
         nameIDs[NameID.FAMILY_NAME] = f"{currentFamilyName} {familyNameSuffix}".strip()
         nameIDs[NameID.TYPOGRAPHIC_FAMILY_NAME] = currentFamilyName
-        nameIDs[NameID.TYPOGRAPHIC_SUBFAMILY_NAME] = f"{typoSubFamilyName}"
-    # Remove previous Typographic Family and SubFamily names since they're
-    # no longer required
+        nameIDs[NameID.TYPOGRAPHIC_SUBFAMILY_NAME] = typoSubFamilyName
     else:
+        # Remove previous Typographic Family and SubFamily names since they're
+        # no longer required
         for nameID in (
             NameID.TYPOGRAPHIC_FAMILY_NAME,
             NameID.TYPOGRAPHIC_SUBFAMILY_NAME,
