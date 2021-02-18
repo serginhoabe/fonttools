@@ -83,6 +83,7 @@ def updateNameTable(varfont, axisLimits):
     # AxisValues found in step 1. The updated name table will conform to the
     # RIBBI naming model, more info can be found here:
     # https://docs.microsoft.com/en-us/typography/opentype/spec/name#name-ids
+    # RIBBI is an acronym for (Regular, Italic, Bold, Bold Italic) font styles
 
     # Example: Updating a partial variable font:
     # | >>> ttFont = TTFont("OpenSans[wdth,wght].ttf")
