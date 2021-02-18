@@ -212,11 +212,13 @@ def _updateNameRecords(varfont, axisValues):
         subFamilyName = " ".join(
             getName(n, *platform).toUnicode() for n in ribbiNameIDs
         )
-        typoSubFamilyName = " ".join(
-            getName(n, *platform).toUnicode()
-            for n in axisValueNameIDs
-            if nonRibbiNameIDs
-        )
+        if nonRibbiNameIDs:
+            typoSubFamilyName = " ".join(
+                getName(n, *platform).toUnicode()
+                for n in axisValueNameIDs
+            )
+        else:
+            typoSubFamilyName = None
 
         # If neither subFamilyName and typographic SubFamilyName exist,
         # we will use the STAT's elidedFallbackName
