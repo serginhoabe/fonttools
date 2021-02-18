@@ -68,36 +68,38 @@ def pruningUnusedNames(varfont):
 
 
 def updateNameTable(varfont, axisLimits):
-    """Update an instatiated variable font's name table using the Axis
-    Values from the STAT table.
+    """Update an instatiated variable font's name table using the
+    AxisValues from the STAT table.
 
     The updated name table will conform to the R/I/B/BI naming model.
+    R/I/B/BI is an acronym for (Regular, Italic, Bold, Bold Italic) font
+    styles.
+
+    This task can be split into two parts:
+
+    Task 1: Collect and sort the relevant AxisValues into a new list which
+    only includes AxisValues whose coordinates match the new default
+    axis locations. We also skip any AxisValues which are elided.
+
+    Task 2: Update the name table's style and family names records using the
+    AxisValues found in step 1. The MS spec provides further info for applying
+    the R/I/B/BI model to each name record:
+    https://docs.microsoft.com/en-us/typography/opentype/spec/name#name-ids
+
+    Example: Updating a partial variable font:
+    | >>> ttFont = TTFont("OpenSans[wdth,wght].ttf")
+    | >>> updateNameTable(ttFont, {"wght": AxisRange(400, 900), "wdth": 75})
+
+    The name table records will be updated in the following manner:
+    NameID 1 familyName: "Open Sans" --> "Open Sans Condensed"
+    NameID 2 subFamilyName: "Regular" --> "Regular"
+    NameID 3 Unique font identifier: "3.000;GOOG;OpenSans-Regular" --> \
+        "3.000;GOOG;OpenSans-Condensed"
+    NameID 4 Full font name: "Open Sans Regular" --> "Open Sans Condensed"
+    NameID 6 PostScript name: "OpenSans-Regular" --> "OpenSans-Condensed"
+    NameID 16 Typographic Family name: None --> "Open Sans"
+    NameID 17 Typographic Subfamily name: None --> "Condensed"
     """
-    # This task can be split into two parts:
-
-    # Task 1: Collect and sort the relevant AxisValues into a new list which
-    # only includes AxisValues whose coordinates match the new default
-    # axis locations. We also skip any AxisValues which are elided.
-
-    # Task 2: Update the name table's style and family names records using the
-    # AxisValues found in step 1. The updated name table will conform to the
-    # RIBBI naming model, more info can be found here:
-    # https://docs.microsoft.com/en-us/typography/opentype/spec/name#name-ids
-    # RIBBI is an acronym for (Regular, Italic, Bold, Bold Italic) font styles
-
-    # Example: Updating a partial variable font:
-    # | >>> ttFont = TTFont("OpenSans[wdth,wght].ttf")
-    # | >>> updateNameTable(ttFont, {"wght": AxisRange(400, 900), "wdth": 75})
-
-    # The name table records will be updated in the following manner:
-    # NameID 1 familyName: "Open Sans" --> "Open Sans Condensed"
-    # NameID 2 subFamilyName: "Regular" --> "Regular"
-    # NameID 3 Unique font identifier: "3.000;GOOG;OpenSans-Regular" --> \
-    #     "3.000;GOOG;OpenSans-Condensed"
-    # NameID 4 Full font name: "Open Sans Regular" --> "Open Sans Condensed"
-    # NameID 6 PostScript name: "OpenSans-Regular" --> "OpenSans-Condensed"
-    # NameID 16 Typographic Family name: None --> "Open Sans"
-    # NameID 17 Typographic Subfamily name: None --> "Condensed"
     from . import AxisRange, axisValuesFromAxisLimits
 
     if "STAT" not in varfont:
