@@ -75,14 +75,13 @@ def updateNameTable(varfont, axisLimits):
     """
     # This task can be split into two parts:
 
-    # Task 1: Collecting and sorting the relevant AxisValues by creating a new
-    # dictionary which corresponds to the new default axis locations. We then
-    # create a list of new AxisValues which match the coordinates of the new
-    # dictionary but we also skip any AxisValues which are elided.
+    # Task 1: Collect and sort the relevant AxisValues into a new list which
+    # only includes AxisValues whose coordinates match the new default
+    # axis locations. We also skip any AxisValues which are elided.
 
     # Task 2: Update the name table's style and family names records using the
-    # AxisValues found in task 1. The name table will conform to the RIBBI
-    # naming model, more info can be found here:
+    # AxisValues found in step 1. The updated name table will conform to the
+    # RIBBI naming model, more info can be found here:
     # https://docs.microsoft.com/en-us/typography/opentype/spec/name#name-ids
 
     # Example: Updating a partial variable font:
