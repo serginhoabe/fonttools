@@ -68,23 +68,15 @@ def pruningUnusedNames(varfont):
 
 
 def updateNameTable(varfont, axisLimits):
-    """Update an instatiated variable font's name table using the
-    AxisValues from the STAT table.
+    """Update instatiated variable font's name table using STAT AxisValues.
 
-    The updated name table will conform to the R/I/B/BI naming model.
-    R/I/B/BI is an acronym for (Regular, Italic, Bold, Bold Italic) font
-    styles.
-
-    This task can be split into two parts:
-
-    Task 1: Collect and sort the relevant AxisValues into a new list which
-    only includes AxisValues whose coordinates match the new default
-    axis locations. We also skip any AxisValues which are elided.
-
-    Task 2: Update the name table's style and family names records using the
-    AxisValues found in step 1. The MS spec provides further info for applying
-    the R/I/B/BI model to each name record:
-    https://docs.microsoft.com/en-us/typography/opentype/spec/name#name-ids
+    First, collect all STAT AxisValues that match the new default axis locations
+    (excluding "elided" ones); concatenate the strings in design axis order,
+    while giving priority to "synthetic" values (Format 4), to form the
+    typographic subfamily name associated with the new default instance.
+    Finally, update all related records in the name table, making sure that
+    legacy family/sub-family names conform to the the R/I/B/BI (Regular, Italic,
+    Bold, Bold Italic) naming model.
 
     Example: Updating a partial variable font:
     | >>> ttFont = TTFont("OpenSans[wdth,wght].ttf")
@@ -99,6 +91,10 @@ def updateNameTable(varfont, axisLimits):
     NameID 6 PostScript name: "OpenSans-Regular" --> "OpenSans-Condensed"
     NameID 16 Typographic Family name: None --> "Open Sans"
     NameID 17 Typographic Subfamily name: None --> "Condensed"
+
+    References:
+    https://docs.microsoft.com/en-us/typography/opentype/spec/stat
+    https://docs.microsoft.com/en-us/typography/opentype/spec/name#name-ids
     """
     from . import AxisRange, axisValuesFromAxisLimits
 
@@ -123,9 +119,7 @@ def updateNameTable(varfont, axisLimits):
     axisValueTables = axisValuesFromAxisLimits(stat, defaultAxisCoords)
     checkAxisValuesExist(stat, axisValueTables, defaultAxisCoords)
 
-    # Ignore axis Values which have ELIDABLE_AXIS_VALUE_NAME flag set.
-    # AxisValues which have this flag enabled won't be visible in
-    # application font menus.
+    # ignore "elidable" axis values, should be omitted in application font menus.
     axisValueTables = [
         v for v in axisValueTables if not v.Flags & ELIDABLE_AXIS_VALUE_NAME
     ]
