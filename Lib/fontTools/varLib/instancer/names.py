@@ -213,8 +213,7 @@ def _updateNameRecords(varfont, axisValues):
         )
         if nonRibbiNameIDs:
             typoSubFamilyName = " ".join(
-                getName(n, *platform).toUnicode()
-                for n in axisValueNameIDs
+                getName(n, *platform).toUnicode() for n in axisValueNameIDs
             )
         else:
             typoSubFamilyName = None
@@ -241,21 +240,11 @@ def _updateNameRecords(varfont, axisValues):
 
 
 def _isRibbi(nametable, nameID):
-    engNameRecords = any(
-        r
-        for r in nametable.names
-        if (r.platformID, r.platEncID, r.langID) == (3, 1, 0x409)
-    )
-    if not engNameRecords:
-        raise ValueError(
-            f"Cannot determine if there are RIBBI Axis Value Tables "
-            "since there are no name table Records which have "
-            "platformID=3, platEncID=1, langID=0x409"
-        )
+    englishRecord = nametable.getName(nameID, 3, 1, 0x409)
     return (
         True
-        if nametable.getName(nameID, 3, 1, 0x409).toUnicode()
-        in ("Regular", "Italic", "Bold", "Bold Italic")
+        if englishRecord is not None
+        and englishRecord.toUnicode() in ("Regular", "Italic", "Bold", "Bold Italic")
         else False
     )
 
