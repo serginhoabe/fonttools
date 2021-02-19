@@ -564,126 +564,64 @@ class Builder(object):
     def build_STAT(self):
         if not self.stat_:
             return
-        self.font["STAT"] = newTable("STAT")
-        table = self.font["STAT"].table = otTables.STAT()
-        table.Version = 0x00010001
+
+        axis = self.stat_.get("DesignAxes")
+        if not axis:
+            raise FeatureLibError('DesignAxes not defined', None)
+        axisValueRecords = self.stat_.get("AxisValueRecords")
+        axisValues = {}
+        format4_locations = None
+        for tag in axis:
+            axisValues[tag.tag] = []
+        if axisValueRecords:
+            for avr in axisValueRecords:
+                valuesDict = {}
+                if avr.flags > 0:
+                    valuesDict['flags'] = avr.flags
+                if len(avr.locations) == 1:
+                    location = avr.locations[0]
+                    values = location.values
+                    if len(values) == 1: #format1
+                        valuesDict.update({'value': values[0],'name': avr.names})
+                    if len(values) == 2: #format3
+                        valuesDict.update({ 'value': values[0],
+                                            'linkedValue': values[1],
+                                            'name': avr.names})
+                    if len(values) == 3: #format2
+                        nominal, minVal, maxVal = values
+                        valuesDict.update({ 'nominalValue': nominal,
+                                            'rangeMinValue': minVal,
+                                            'rangeMaxValue': maxVal,
+                                            'name': avr.names})
+                    axisValues[location.tag].append(valuesDict)
+                else:
+                    valuesDict.update({"location": {i.tag: i.values[0]
+                                                       for i in avr.locations},
+                                          "name": avr.names})
+                    format4_locations = [valuesDict]
+        designAxis = [{"ordering": a.axisOrder,
+                       "tag": a.tag,
+                       "name": a.names[0].string,
+                       'values': axisValues[a.tag]} for a in axis]
+        
         nameTable = self.font.get("name")
         if not nameTable:  # this only happens for unit tests
             nameTable = self.font["name"] = newTable("name")
             nameTable.names = []
+
         if "ElidedFallbackNameID" in self.stat_:
-            nameID = self.stat_["ElidedFallbackNameID"]
-            name = nameTable.getDebugName(nameID)
-            if not name:
+            nameID = self.stat_["ElidedFallbackNameID"] 
+            name = nameTable.getDebugName(nameID) 
+            if not name: 
                 raise FeatureLibError('ElidedFallbackNameID %d points '
                                       'to a nameID that does not exist in the '
                                       '"name" table' % nameID, None)
-            table.ElidedFallbackNameID = nameID
-        if "ElidedFallbackName" in self.stat_:
-            nameRecords = self.stat_["ElidedFallbackName"]
-            nameID = self.get_user_name_id(nameTable)
-            for nameRecord in nameRecords:
-                nameTable.setName(nameRecord.string, nameID,
-                                  nameRecord.platformID, nameRecord.platEncID,
-                                  nameRecord.langID)
-            table.ElidedFallbackNameID = nameID
+        elif "ElidedFallbackName" in self.stat_:
+            nameID = self.stat_["ElidedFallbackName"] 
+        
+        otl.buildStatTable(self.font, designAxis, locations=format4_locations,
+                           elidedFallbackName=nameID)
 
-        axisRecords = []
-        axisValueRecords = []
-        designAxisOrder = {}
-        for record in self.stat_["DesignAxes"]:
-            axis = otTables.AxisRecord()
-            axis.AxisTag = record.tag
-            nameID = self.get_user_name_id(nameTable)
-            for nameRecord in record.names:
-                nameTable.setName(nameRecord.string, nameID,
-                                  nameRecord.platformID, nameRecord.platEncID,
-                                  nameRecord.langID)
-
-            axis.AxisNameID = nameID
-            axis.AxisOrdering = record.axisOrder
-            axisRecords.append(axis)
-            designAxisOrder[record.tag] = record.axisOrder
-
-        if "AxisValueRecords" in self.stat_:
-            for record in self.stat_["AxisValueRecords"]:
-                if len(record.locations) == 1:
-                    location = record.locations[0]
-                    tag = location.tag
-                    values = location.values
-                    axisOrder = designAxisOrder[tag]
-                    axisValueRecord = otTables.AxisValue()
-                    axisValueRecord.AxisIndex = axisOrder
-                    axisValueRecord.Flags = record.flags
-
-                    nameID = self.get_user_name_id(nameTable)
-                    for nameRecord in record.names:
-                        nameTable.setName(nameRecord.string, nameID,
-                                          nameRecord.platformID,
-                                          nameRecord.platEncID,
-                                          nameRecord.langID)
-
-                    axisValueRecord.ValueNameID = nameID
-
-                    if len(values) == 1:
-                        axisValueRecord.Format = 1
-                        axisValueRecord.Value = values[0]
-                    if len(values) == 2:
-                        axisValueRecord.Format = 3
-                        axisValueRecord.Value = values[0]
-                        axisValueRecord.LinkedValue = values[1]
-                    if len(values) == 3:
-                        axisValueRecord.Format = 2
-                        nominal, minVal, maxVal = values
-                        axisValueRecord.NominalValue = nominal
-                        axisValueRecord.RangeMinValue = minVal
-                        axisValueRecord.RangeMaxValue = maxVal
-                    axisValueRecords.append(axisValueRecord)
-
-                if len(record.locations) > 1:
-                    # Multiple locations = Format 4
-                    table.Version = 0x00010002
-                    axisValue = otTables.AxisValue()
-                    axisValue.Format = 4
-
-                    nameID = self.get_user_name_id(nameTable)
-                    for nameRecord in record.names:
-                        nameTable.setName(nameRecord.string, nameID,
-                                          nameRecord.platformID,
-                                          nameRecord.platEncID,
-                                          nameRecord.langID)
-
-                    axisValue.ValueNameID = nameID
-                    axisValue.Flags = record.flags
-
-                    axisValueRecords_fmt4 = []
-                    for location in record.locations:
-                        tag = location.tag
-                        values = location.values
-                        axisOrder = designAxisOrder[tag]
-                        axisValueRecord = otTables.AxisValueRecord()
-                        axisValueRecord.AxisIndex = axisOrder
-                        axisValueRecord.Value = values[0]
-                        axisValueRecords_fmt4.append(axisValueRecord)
-                    axisValue.AxisCount = len(axisValueRecords_fmt4)
-                    axisValue.AxisValueRecord = axisValueRecords_fmt4
-                    axisValueRecords.append(axisValue)
-
-        if axisRecords:
-            # Store AxisRecords
-            axisRecordArray = otTables.AxisRecordArray()
-            axisRecordArray.Axis = axisRecords
-            # XXX these should not be hard-coded but computed automatically
-            table.DesignAxisRecordSize = 8
-            table.DesignAxisRecord = axisRecordArray
-            table.DesignAxisCount = len(axisRecords)
-
-        if axisValueRecords:
-            # Store AxisValueRecords
-            axisValueArray = otTables.AxisValueArray()
-            axisValueArray.AxisValue = axisValueRecords
-            table.AxisValueArray = axisValueArray
-            table.AxisValueCount = len(axisValueRecords)
 
     def build_codepages_(self, pages):
         pages2bits = {

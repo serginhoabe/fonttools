@@ -2696,7 +2696,10 @@ def buildStatTable(ttFont, axes, locations=None, elidedFallbackName=2):
     """
     ttFont["STAT"] = ttLib.newTable("STAT")
     statTable = ttFont["STAT"].table = ot.STAT()
-    nameTable = ttFont["name"]
+    nameTable = ttFont.get("name")
+    if not nameTable:
+        nameTable = ttFont["name"] = statTable("name")
+        nameTable.names = []
     statTable.ElidedFallbackNameID = _addName(nameTable, elidedFallbackName)
 
     # 'locations' contains data for AxisValue Format 4
@@ -2797,6 +2800,15 @@ def _addName(nameTable, value, minNameID=0):
         names = dict(en=value)
     elif isinstance(value, dict):
         names = value
+    elif isinstance(value, list):
+        nameID = nameTable._findUnusedNameID()
+        for nameRecord in value:
+            if all(hasattr(nameRecord, attr) for attr in
+                   ["string", "nameID", "platformID", "platEncID", "langID"]):
+                nameTable.setName(nameRecord.string,
+                                  nameID,nameRecord.platformID,
+                                  nameRecord.platEncID,nameRecord.langID)
+        return nameID
     else:
-        raise TypeError("value must be int, str or dict")
+        raise TypeError("value must be int, str, dict or list")
     return nameTable.addMultilingualName(names, minNameID=minNameID)
