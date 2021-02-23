@@ -9,6 +9,7 @@ from fontTools.ttLib.tables.otBase import (
     CountReference,
 )
 from fontTools.ttLib.tables import otBase
+from fontTools.ttLib.tables._n_a_m_e import _WINDOWS_LANGUAGES
 from fontTools.otlLib.error import OpenTypeLibError
 import logging
 import copy
@@ -2698,8 +2699,7 @@ def buildStatTable(ttFont, axes, locations=None, elidedFallbackName=2):
     statTable = ttFont["STAT"].table = ot.STAT()
     nameTable = ttFont.get("name")
     if not nameTable:
-        nameTable = ttFont["name"] = statTable("name")
-        nameTable.names = []
+        raise KeyError('Missing "name" in ttFont')
     statTable.ElidedFallbackNameID = _addName(nameTable, elidedFallbackName)
 
     # 'locations' contains data for AxisValue Format 4
@@ -2801,14 +2801,10 @@ def _addName(nameTable, value, minNameID=0):
     elif isinstance(value, dict):
         names = value
     elif isinstance(value, list):
-        nameID = nameTable._findUnusedNameID()
-        for nameRecord in value:
-            if all(hasattr(nameRecord, attr) for attr in
-                   ["string", "nameID", "platformID", "platEncID", "langID"]):
-                nameTable.setName(nameRecord.string,
-                                  nameID,nameRecord.platformID,
-                                  nameRecord.platEncID,nameRecord.langID)
-        return nameID
+        names = {}
+        for name in value:
+            langCode = _WINDOWS_LANGUAGES.get(name.langID)
+            names[langCode] = name.string
     else:
         raise TypeError("value must be int, str, dict or list")
     return nameTable.addMultilingualName(names, minNameID=minNameID)

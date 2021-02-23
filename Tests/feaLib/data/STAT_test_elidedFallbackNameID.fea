@@ -1,5 +1,5 @@
 table name {
-	nameid 25 "TestFont";
+    nameid 25 "TestFont";
     nameid 256 "Roman";
 } name;
 table STAT {

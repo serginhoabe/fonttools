@@ -536,7 +536,7 @@ class Builder(object):
             self.stat_["DesignAxes"] = []
         if designAxis.tag in (r.tag for r in self.stat_["DesignAxes"]):
             raise FeatureLibError(
-                'DesignAxis already defined for tag "%s".' % designAxis.tag,
+                f'DesignAxis already defined for tag "{designAxis.tag}".',
                 location,
             )
         if designAxis.axisOrder in (r.axisOrder for r in self.stat_["DesignAxes"]):
@@ -551,9 +551,10 @@ class Builder(object):
             self.stat_["AxisValueRecords"] = []
         # Check for duplicate AxisValueRecords
         for record_ in self.stat_["AxisValueRecords"]:
-            if (sorted([n.asFea() for n in record_.names]) ==
-                sorted([n.asFea() for n in axisValueRecord.names]) and
-                sorted(record_.locations) == sorted(axisValueRecord.locations)
+            if (set([n.asFea() for n in record_.names]) ==
+                set([n.asFea() for n in axisValueRecord.names]) and
+                set([n.asFea() for n in record_.locations]) == 
+                set([n.asFea() for n in axisValueRecord.locations])
                     and record_.flags == axisValueRecord.flags):
                 raise FeatureLibError(
                     "An AxisValueRecord with these values is already defined.",
@@ -565,15 +566,15 @@ class Builder(object):
         if not self.stat_:
             return
 
-        axis = self.stat_.get("DesignAxes")
-        if not axis:
+        axes = self.stat_.get("DesignAxes")
+        if not axes:
             raise FeatureLibError('DesignAxes not defined', None)
         axisValueRecords = self.stat_.get("AxisValueRecords")
         axisValues = {}
-        format4_locations = None
-        for tag in axis:
+        format4_locations = []
+        for tag in axes:
             axisValues[tag.tag] = []
-        if axisValueRecords:
+        if axisValueRecords is not None:
             for avr in axisValueRecords:
                 valuesDict = {}
                 if avr.flags > 0:
@@ -596,13 +597,14 @@ class Builder(object):
                     axisValues[location.tag].append(valuesDict)
                 else:
                     valuesDict.update({"location": {i.tag: i.values[0]
-                                                       for i in avr.locations},
-                                          "name": avr.names})
-                    format4_locations = [valuesDict]
-        designAxis = [{"ordering": a.axisOrder,
+                                                        for i in avr.locations},
+                                            "name": avr.names})
+                    format4_locations.append(valuesDict)
+
+        designAxes = [{"ordering": a.axisOrder,
                        "tag": a.tag,
                        "name": a.names[0].string,
-                       'values': axisValues[a.tag]} for a in axis]
+                       'values': axisValues[a.tag]} for a in axes]
         
         nameTable = self.font.get("name")
         if not nameTable:  # this only happens for unit tests
@@ -612,14 +614,14 @@ class Builder(object):
         if "ElidedFallbackNameID" in self.stat_:
             nameID = self.stat_["ElidedFallbackNameID"] 
             name = nameTable.getDebugName(nameID) 
-            if not name: 
-                raise FeatureLibError('ElidedFallbackNameID %d points '
+            if not name:
+                raise FeatureLibError(f'ElidedFallbackNameID {nameID} points '
                                       'to a nameID that does not exist in the '
-                                      '"name" table' % nameID, None)
+                                      '"name" table', None)
         elif "ElidedFallbackName" in self.stat_:
             nameID = self.stat_["ElidedFallbackName"] 
         
-        otl.buildStatTable(self.font, designAxis, locations=format4_locations,
+        otl.buildStatTable(self.font, designAxes, locations=format4_locations,
                            elidedFallbackName=nameID)
 
 

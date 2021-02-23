@@ -648,7 +648,7 @@ class BuilderTest(unittest.TestCase):
     def test_STAT_invalid_location_tag(self):
         self.assertRaisesRegex(
             FeatureLibError,
-            'Tags can not be longer than 4 characters',
+            'Tags cannot be longer than 4 characters',
             self.build,
             'table name {'
             '   nameid 256 "Roman"; '

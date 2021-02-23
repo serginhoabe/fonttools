@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="4.19">
+<ttFont sfntVersion="\x00\x01\x00\x00" ttLibVersion="4.20">
 
   <name>
     <namerecord nameID="25" platformID="3" platEncID="1" langID="0x409">
@@ -17,10 +17,19 @@
     <namerecord nameID="258" platformID="3" platEncID="1" langID="0x409">
       Text
     </namerecord>
+    <namerecord nameID="258" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Text
+    </namerecord>
     <namerecord nameID="259" platformID="3" platEncID="1" langID="0x409">
       Subhead
     </namerecord>
+    <namerecord nameID="259" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Subhead
+    </namerecord>
     <namerecord nameID="260" platformID="3" platEncID="1" langID="0x409">
+      Display
+    </namerecord>
+    <namerecord nameID="260" platformID="1" platEncID="0" langID="0x0" unicode="True">
       Display
     </namerecord>
     <namerecord nameID="261" platformID="3" platEncID="1" langID="0x409">
@@ -32,13 +41,25 @@
     <namerecord nameID="262" platformID="3" platEncID="1" langID="0x409">
       Condensed
     </namerecord>
+    <namerecord nameID="262" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Condensed
+    </namerecord>
     <namerecord nameID="263" platformID="3" platEncID="1" langID="0x409">
+      Semicondensed
+    </namerecord>
+    <namerecord nameID="263" platformID="1" platEncID="0" langID="0x0" unicode="True">
       Semicondensed
     </namerecord>
     <namerecord nameID="264" platformID="3" platEncID="1" langID="0x409">
       Normal
     </namerecord>
+    <namerecord nameID="264" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Normal
+    </namerecord>
     <namerecord nameID="265" platformID="3" platEncID="1" langID="0x409">
+      Extended
+    </namerecord>
+    <namerecord nameID="265" platformID="1" platEncID="0" langID="0x0" unicode="True">
       Extended
     </namerecord>
     <namerecord nameID="266" platformID="3" platEncID="1" langID="0x409">
@@ -50,19 +71,37 @@
     <namerecord nameID="267" platformID="3" platEncID="1" langID="0x409">
       Light
     </namerecord>
+    <namerecord nameID="267" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Light
+    </namerecord>
     <namerecord nameID="268" platformID="3" platEncID="1" langID="0x409">
+      Regular
+    </namerecord>
+    <namerecord nameID="268" platformID="1" platEncID="0" langID="0x0" unicode="True">
       Regular
     </namerecord>
     <namerecord nameID="269" platformID="3" platEncID="1" langID="0x409">
       Medium
     </namerecord>
+    <namerecord nameID="269" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Medium
+    </namerecord>
     <namerecord nameID="270" platformID="3" platEncID="1" langID="0x409">
+      Semibold
+    </namerecord>
+    <namerecord nameID="270" platformID="1" platEncID="0" langID="0x0" unicode="True">
       Semibold
     </namerecord>
     <namerecord nameID="271" platformID="3" platEncID="1" langID="0x409">
       Bold
     </namerecord>
+    <namerecord nameID="271" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Bold
+    </namerecord>
     <namerecord nameID="272" platformID="3" platEncID="1" langID="0x409">
+      Black
+    </namerecord>
+    <namerecord nameID="272" platformID="1" platEncID="0" langID="0x0" unicode="True">
       Black
     </namerecord>
     <namerecord nameID="273" platformID="3" platEncID="1" langID="0x409">
@@ -74,7 +113,13 @@
     <namerecord nameID="274" platformID="3" platEncID="1" langID="0x409">
       Roman
     </namerecord>
+    <namerecord nameID="274" platformID="1" platEncID="0" langID="0x0" unicode="True">
+      Roman
+    </namerecord>
     <namerecord nameID="275" platformID="3" platEncID="1" langID="0x409">
+      Caption
+    </namerecord>
+    <namerecord nameID="275" platformID="1" platEncID="0" langID="0x0" unicode="True">
       Caption
     </namerecord>
   </name>
